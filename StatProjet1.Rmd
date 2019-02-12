@@ -1,0 +1,220 @@
+---
+title: "CS6313.002 Statistical Project 1"
+author: "Ruolan Zeng(rxz171630), Vineet Vilas Amonkar(vva180000), Aakash Kamlesh Punjabi(
+akp170430)"
+date: "Oct 24th 2018"
+output: html_document
+---
+
+## Token Selection
+
+The token we use: networkstorjTX.txt
+
+## Preprocessing
+
+**Load TokenData:**
+
+```{r}
+tokenData <- read.delim("networkstorjTX.txt", header = FALSE, sep = " ")
+tokenFrame<- as.data.frame(tokenData)
+colnames(tokenFrame) <- c("fromNodeID","toNodeID","unixTime","tokenAmount")
+head(tokenFrame)
+```
+
+**Find Outliers:**
+
+```{r}
+TotalSupply <- 424999998
+Decimals <- 10^8
+OutlierValue <- TotalSupply*Decimals
+Outlierdata <- tokenFrame[ which(tokenFrame$tokenAmount > OutlierValue),]
+head(Outlierdata)
+```
+
+**Total Number Of Outliers:**
+
+```{r}
+message("Total number of outliers: ", length(Outlierdata$tokenAmount))
+```
+
+**How Many Users Are Included In Outliers Transactions:**
+
+```{r}
+users <- c(Outlierdata$fromNodeID,Outlierdata$toNodeID)
+uniqueUsers<- unique(users)
+message(length(uniqueUsers), " users are includednin outliers transactions")
+
+```
+
+**Remove Outliers**
+```{r}
+WithoutOutlierdata <- tokenFrame[ which(tokenFrame$tokenAmount < OutlierValue),]
+```
+
+## Q1
+## Find Distribution -- Buys
+
+```{r}
+frequencyTable <- table(WithoutOutlierdata[2])
+freq<- as.data.frame(frequencyTable)
+colnames(freq) <- c("buyerID","frequency")
+head(freq)
+FrequencyBuyers = table(freq$frequency)
+freqNoBuys = as.data.frame(FrequencyBuyers)
+colnames(freqNoBuys) <- c("NoBuys","freqNoBuys")
+head(freqNoBuys)
+
+```
+
+
+```{r}
+barplot(freqNoBuys$freqNoBuys,names.arg = freqNoBuys$NoBuys,ylab = "frequencyNoBuys", xlab = "NoBuys", xlim = c(0,20),ylim = c(0,140000))
+```
+
+## Fit Distribution -- Buys
+
+```{r}
+message("mean of frequency of number of buys is ", mean(freqNoBuys$freqNoBuys))
+message("variance of frequency of number of buys is ", sd(freqNoBuys$freqNoBuys)^2)
+message("standard deviation of frequency of number of buys is ", sd(freqNoBuys$freqNoBuys))
+```
+
+**1. Poisson Distribution**
+```{r}
+library(fitdistrplus)
+fit <- fitdist(freqNoBuys$freqNoBuys, "pois", method="mle")
+fit
+```
+
+```{r}
+plot(fit)
+```
+
+**2. Weibull Distribution**
+```{r}
+fit2 <- fitdist(freqNoBuys$freqNoBuys, "weibull",method = "mle")
+fit2
+```
+
+```{r}
+plot(fit2)
+```
+
+**3. Exponential Distribution**
+```{r}
+fit3 <- fitdist(freqNoBuys$freqNoBuys, "exp",method = "mme")
+fit3
+```
+
+```{r}
+plot(fit3)
+```
+
+**4. Geometric Distribution**
+```{r}
+fit4 <- fitdist(freqNoBuys$freqNoBuys, "geom",method = "mme")
+fit4
+```
+```{r}
+plot(fit4)
+```
+
+**5. Normal Distribution**
+```{r}
+message("mean of frequency of number of buys is ", mean(freqNoBuys$freqNoBuys))
+message("standard deviation of frequency of number of buys is ", sd(freqNoBuys$freqNoBuys))
+fit5 <- fitdist(freqNoBuys$freqNoBuys, "norm")
+fit5
+```
+
+```{r}
+plot(fit5)
+```
+
+## Find Distribution -- Sells
+
+```{r}
+frequencyTable <- table(WithoutOutlierdata[1])
+freq<- as.data.frame(frequencyTable)
+colnames(freq) <- c("sellerID","frequency")
+head(freq)
+FrequencySellers = table(freq$frequency)
+freqNoSells = as.data.frame(FrequencySellers)
+colnames(freqNoSells) <- c("NoSells","freqNoSells")
+head(freqNoSells)
+```
+
+```{r}
+barplot(freqNoSells$freqNoSells,names.arg = freqNoSells$NoSells,ylab = "freqNoSells", xlab = "NoSells", xlim = c(0,20),ylim = c(0,50000))
+```
+
+## Fit Distribution -- Sells
+
+```{r}
+message("mean of frequency of number of sells is ", mean(freqNoSells$freqNoSells))
+message("variance of frequency of number of buys is ", sd(freqNoSells$freqNoSells)^2)
+message("standard deviation of frequency of number of buys is ", sd(freqNoSells$freqNoSells))
+```
+
+**1. Poisson Distribution**
+
+```{r}
+library(fitdistrplus)
+fitSells <- fitdist(freqNoSells$freqNoSells, "pois", method="mle")
+fitSells
+```
+
+From above, we observe that mean is equal to lambda, hence, distribution is poisson distribution.
+
+```{r}
+plot(fitSells)
+```
+
+**2. Weibull Distribution**
+```{r}
+fitSells2 <- fitdist(freqNoSells$freqNoSells, "weibull",method = "mle")
+fitSells2
+```
+
+```{r}
+plot(fitSells2)
+```
+
+**3. Exponential Distribution**
+```{r}
+fitSells3 <- fitdist(freqNoSells$freqNoSells, "exp",method = "mme")
+fitSells3
+```
+
+```{r}
+plot(fitSells3)
+```
+
+**4. Geometric Distribution**
+```{r}
+fitSells4 <- fitdist(freqNoSells$freqNoSells, "geom",method = "mme")
+fitSells4
+```
+```{r}
+plot(fitSells4)
+```
+
+**5. Normal Distribution**
+```{r}
+message("mean of frequency of number of sells is ", mean(freqNoSells$freqNoSells))
+message("standard deviation of frequency of number of buys is ", sd(freqNoSells$freqNoSells))
+fitSells5 <- fitdist(freqNoSells$freqNoSells, "norm")
+fitSells5
+```
+
+```{r}
+plot(fitSells5)
+```
+
+##Conclusion
+After compare with parameters and graphs of different distributions, we can find:
+
+The estimate parameters of Normal Distribution are very close to the parameters of our token data, but the graphs don't fit well. 
+The graphs of Poisson Distribution and Weibull Distribution both fit our token data well, but for the parameters, the mean(buys:1331.66, sells:499.26) is not equal to variance(buys:133341824.3, sells:17815729.69), so it should not be Poisson Distribution.
+
+Hence, we finally conclude that **Weibull Distribution** fit our distribution best.
